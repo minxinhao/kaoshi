@@ -35,6 +35,7 @@ struct classroom{
     int class_capacity;
 };
 std::vector<struct classroom > classrooms;
+std::vector<struct classroom > available_classroom;
 
 // 12.28 12.29 12.30 12.31
 int num_days = 4;
@@ -48,10 +49,10 @@ const char* days_str[4]={
 // 2 in morning, 2 in afternoon
 int num_time_period = 4;
 const char* period_str[4]={
-    "8:00-10:00",
-    "10:00-12:00",
-    "14:00-16:00",
-    "16:00-18:00"
+    "8:00-9:40",
+    "10:00-11:40",
+    "14:00-15:40",
+    "16:00-17:40"
 };
 
 struct Period{
@@ -128,6 +129,20 @@ void CollectSubjects(){
     // }
 }
 
+bool CheckClassroom(struct subject& cur_subject){
+    if(available_classroom.size()< cur_subject.subjects.size()){
+        return false;
+    }
+    auto pos = available_classroom.begin();
+    for(auto iter = cur_subject.subjects.begin();iter!=cur_subject.subjects.end();iter++){
+        if(pos == available_classroom.end()) return false;
+        if(iter->student_num > pos->class_capacity) return false;
+    }
+
+    return true;
+}
+
+
 bool Check(struct subject& cur_subject,struct Period& cur_period){
     for(auto iter = cur_subject.subjects.begin(); iter != cur_subject.subjects.end(); iter++){
         auto pos = class_to_last_period.find(std::string(iter->class_name)); 
@@ -148,9 +163,6 @@ int main(){
     // 所有可用的考试场次
     // 1. 同一个班级 同一个时段只能有一门考试
     // 2. 同一门考试 所有班级一起考
-    std::vector<struct classroom > available_classroom;
-    struct classroom tmp_classroom;
-
     for(int i = 0 ; i < num_days ; i++){
         for(int j = 0 ; j < num_time_period ; j++){
             available_classroom = classrooms;
@@ -159,7 +171,7 @@ int main(){
             // get class of top Subject s
             for(auto iter = subject_sets.begin() ; iter != subject_sets.end(); ){
                 // check if there are enough classrooms for subject s
-                if(available_classroom.size()< iter->subjects.size()){
+                if(!CheckClassroom(*iter)){
                     iter++;
                     continue;
                 }
@@ -167,11 +179,11 @@ int main(){
                 if(Check(*iter,cur_period)){
                     // Assign classroom for all class in s
                     printf("%s\n",iter->subject_name.c_str());
+                    auto pos = available_classroom.begin();
                     for(auto iter_2 = iter->subjects.begin();iter_2!=iter->subjects.end();iter_2++){
-                        tmp_classroom = available_classroom.back();
-                        available_classroom.pop_back();
                         class_to_last_period[std::string(iter_2->class_name)]=cur_period;
-                        printf("%s:[%s] %s %s\n",days_str[cur_period.day_id],period_str[cur_period.period_id],iter_2->class_name,tmp_classroom.class_site); 
+                        printf("%s:[%s] %s 考试人数:%d %s 教室人数:%d\n",days_str[cur_period.day_id],period_str[cur_period.period_id],iter_2->class_name,iter_2->student_num,pos->class_site,pos->class_capacity); 
+                        pos = available_classroom.erase(pos);
                     }
                     // erase cur subject from queue
                     iter=subject_sets.erase(iter);
@@ -180,11 +192,12 @@ int main(){
                     iter++;
                 }
             }
-
-
         }
     }
 
+    if(subject_sets.size()!=0){
+        printf("There are subjects not allocated\n");
+    }
 
     return 0;
 }
