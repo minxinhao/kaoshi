@@ -16,7 +16,7 @@ struct  subject_unit{
     int student_num;
 
     bool operator<(const struct subject_unit & other)const{
-       return this->student_num > other.student_num;
+       return this->student_num >= other.student_num;
     }
 };
 std::vector<struct subject_unit > subjects;
@@ -80,8 +80,6 @@ void LoadSubject(){
     }
     fclose(subject_fp);
     
-    // std::sort(subjects.begin(),subjects.end(),SubjectCmp);
-
     // for(auto iter = subjects.begin(); iter!=subjects.end();iter++){
     //     printf("%s %s %s %s %s %d\n",iter->subject_name,iter->type,iter->teacher_name,iter->test_type,iter->class_name,iter->student_num);
     // }
@@ -107,6 +105,7 @@ std::vector<struct subject> subject_sets;
 void CollectSubjects(){
     std::map<std::string,std::set<struct subject_unit> > subject_collect;
     for(auto iter = subjects.begin(); iter!=subjects.end();iter++){
+        // printf("%s %s %s %s %s %d\n",iter->subject_name,iter->type,iter->teacher_name,iter->test_type,iter->class_name,iter->student_num);   
         subject_collect[std::string(iter->subject_name)].insert(*iter);
     }
 
@@ -137,6 +136,7 @@ bool CheckClassroom(struct subject& cur_subject){
     for(auto iter = cur_subject.subjects.begin();iter!=cur_subject.subjects.end();iter++){
         if(pos == available_classroom.end()) return false;
         if(iter->student_num > pos->class_capacity) return false;
+        pos++;
     }
 
     return true;
